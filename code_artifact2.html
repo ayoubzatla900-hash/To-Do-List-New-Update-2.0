@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="مهامي" />
+  <title>مهامي - مُنظّم المهام والمواعيد</title>
+  <link id="dynamicManifest" rel="manifest" />
+  <link id="appleTouchIcon" rel="apple-touch-icon" />
+  <link id="faviconIcon" rel="icon" type="image/svg+xml" />
+  <style>
+    /* ==========================================================================
+       1. متغيرات الألوان والتصميم (CSS Variables) للوضع الليلي والنهاري
+       ========================================================================== */
+    :root {
+      --font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --transition: 0.2s ease;
+    }
+
+    /* الوضع الليلي الافتراضي (مريح للعين وعالي التباين) */
+    [data-theme="dark"] {
+      --bg-body: #090e1a;
+      --bg-card: rgba(30, 41, 59, 0.78);
+      --bg-card-solid: #1e293b;
+      --bg-input: rgba(15, 23, 42, 0.85);
+      --bg-hover: rgba(39, 53, 73, 0.9);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: rgba(148, 163, 184, 0.22);
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.45);
+      --grad-1: #090e1a;
+      --grad-2: #0f172a;
+      --grad-3: #131c33;
+      --orb-1: rgba(59, 130, 246, 0.24);
+      --orb-2: rgba(16, 185, 129, 0.18);
+      --orb-3: rgba(139, 92, 246, 0.18);
+      
+      --prio-high-bg: rgba(239, 68, 68, 0.16);
+      --prio-high-text: #fca5a5;
+      --prio-high-border: rgba(239, 68, 68, 0.35);
+
+      --prio-med-bg: rgba(245, 158, 11, 0.16);
+      --prio-med-text: #fcd34d;
+      --prio-med-border: rgba(245, 158, 11, 0.35);
+
+      --prio-low-bg: rgba(16, 185, 129, 0.16);
+      --prio-low-text: #6ee7b7;
+      --prio-low-border: rgba(16, 185, 129, 0.35);
+    }
+
+    /* الوضع النهاري */
+    [data-theme="light"] {
+      --bg-body: #eef2f9;
+      --bg-card: rgba(255, 255, 255, 0.82);
+      --bg-card-solid: #ffffff;
+      --bg-input: rgba(248, 250, 252, 0.9);
+      --bg-hover: rgba(241, 245, 249, 0.95);
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --border-color: rgba(148, 163, 184, 0.35);
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+      --grad-1: #eef2f9;
+      --grad-2: #e0e7ff;
+      --grad-3: #f0fdf4;
+      --orb-1: rgba(59, 130, 246, 0.22);
+      --orb-2: rgba(16, 185, 129, 0.18);
+      --orb-3: rgba(99, 102, 241, 0.16);
+
+      --prio-high-bg: #fee2e2;
+      --prio-high-text: #b91c1c;
+      --prio-high-border: #fca5a5;
+
+      --prio-med-bg: #fef3c7;
+      --prio-med-text: #b45309;
+      --prio-med-border: #fcd34d;
+
+      --prio-low-bg: #d1fae5;
+      --prio-low-text: #047857;
+      --prio-low-border: #6ee7b7;
+    }
+
+    /* ==========================================================================
+       2. التنسيقات العامة والخلفية المتحركة (Animated Background)
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 1.25rem;
+      position: relative;
+      overflow-x: hidden;
+      transition: background-color var(--transition), color var(--transition);
+    }
+
+    /* طبقة الخلفية المتحركة بتدرج وهالات ضوئية ناعمة */
+    .animated-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      overflow: hidden;
+      background: linear-gradient(125deg, var(--grad-1), var(--grad-2), var(--grad-3), var(--grad-1));
+      background-size: 300% 300%;
+      animation: gradientShift 18s ease infinite;
+      transition: opacity 0.35s ease;
+    }
+
+    .bg-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(70px);
+      will-change: transform;
+      opacity: 0.95;
+    }
+
+    .orb-1 {
+      width: 42vmax;
+      height: 42vmax;
+      top: -12vmax;
+      right: -10vmax;
+      background: radial-gradient(circle, var(--orb-1) 0%, transparent 70%);
+      animation: floatOrbOne 22s ease-in-out infinite alternate;
+    }
+
+    .orb-2 {
+      width: 38vmax;
+      height: 38vmax;
+      bottom: -14vmax;
+      left: -8vmax;
+      background: radial-gradient(circle, var(--orb-2) 0%, transparent 70%);
+      animation: floatOrbTwo 26s ease-in-out infinite alternate;
+    }
+
+    .orb-3 {
+      width: 30vmax;
+      height: 30vmax;
+      top: 38%;
+      left: 30%;
+      background: radial-gradient(circle, var(--orb-3) 0%, transparent 70%);
+      animation: floatOrbThree 20s ease-in-out infinite alternate;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes floatOrbOne {
+      0% { transform: translate3d(0, 0, 0) scale(1); }
+      100% { transform: translate3d(-12vw, 10vh, 0) scale(1.12); }
+    }
+
+    @keyframes floatOrbTwo {
+      0% { transform: translate3d(0, 0, 0) scale(1); }
+      100% { transform: translate3d(14vw, -12vh, 0) scale(1.15); }
+    }
+
+    @keyframes floatOrbThree {
+      0% { transform: translate3d(0, 0, 0) scale(0.95); }
+      100% { transform: translate3d(-8vw, -9vh, 0) scale(1.1); }
+    }
+
+    /* إيقاف الحركة عند طلب المستخدم */
+    body.motion-paused .animated-bg,
+    body.motion-paused .bg-orb {
+      animation-play-state: paused;
+    }
+
+    body.motion-paused .bg-orb {
+      opacity: 0.45;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* الوضع النهاري */
+    [data-theme="light"] {
+      --bg-body: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-input: #f8fafc;
+      --bg-hover: #f1f5f9;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #cbd5e1;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+
+      --prio-high-bg: #fee2e2;
+      --prio-high-text: #b91c1c;
+      --prio-high-border: #fca5a5;
+
+      --prio-med-bg: #fef3c7;
+      --prio-med-text: #b45309;
+      --prio-med-border: #fcd34d;
+
+      --prio-low-bg: #d1fae5;
+      --prio-low-text: #047857;
+      --prio-low-border: #6ee7b7;
+    }
+
+    /* ==========================================================================
+       2. التنسيقات العامة
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 1.25rem;
+      transition: background-color var(--transition), color var(--transition);
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    /* ==========================================================================
+       3. الشريط العلوي (Header)
+       ========================================================================== */
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .brand h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    /* الأزرار العامة */
+    button, .btn {
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.6rem 1rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-card-solid);
+      background-color: var(--bg-card);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: var(--text-main);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: all var(--transition);
+      min-height: 40px;
+    }
+
+    button:hover {
+      background-color: var(--bg-hover);
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
+
+    .btn-danger {
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.35);
+    }
+
+    .btn-danger:hover {
+      background-color: rgba(239, 68, 68, 0.12);
+    }
+
+    .btn-install {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      border-color: #059669;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+
+    .btn-install:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+      border-color: #047857;
+    }
+
+    /* ==========================================================================
+       4. شريط الإحصائيات السريعة (Stats Bar)
+       ========================================================================== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background-color: var(--bg-card-solid);
+      background-color: var(--bg-card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .stat-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+    }
+
+    .stat-value.accent { color: var(--primary); }
+    .stat-value.success { color: #10b981; }
+    .stat-value.warning { color: #f59e0b; }
+
+    /* ==========================================================================
+       5. نموذج إضافة / تعديل مهمة أو موعد
+       ========================================================================== */
+    .card {
+      background-color: var(--bg-card-solid);
+      background-color: var(--bg-card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1.5rem;
+    }
+
+    .form-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .task-form {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.85rem;
+    }
+
+    @media (min-width: 680px) {
+      .task-form {
+        grid-template-columns: 2fr 1.3fr 1fr 1fr;
+      }
+      .form-submit-row {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.6rem;
+      }
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .field-group label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    input[type="text"],
+    input[type="datetime-local"],
+    select {
+      width: 100%;
+      padding: 0.65rem 0.8rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-input);
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color var(--transition);
+      min-height: 42px;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--primary);
+    }
+
+    /* ==========================================================================
+       6. شريط البحث والتصفية (Filters & Search)
+       ========================================================================== */
+    .controls-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin-bottom: 1.25rem;
+    }
+
+    @media (min-width: 720px) {
+      .controls-bar {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 0.45rem 0.9rem;
+      font-size: 0.88rem;
+      border-radius: 999px;
+    }
+
+    .tab-btn.active {
+      background-color: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .filters-right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    .filters-right input {
+      max-width: 240px;
+    }
+
+    .filters-right select {
+      max-width: 165px;
+    }
+
+    /* ==========================================================================
+       7. قائمة المهام والمواعيد (Task List)
+       ========================================================================== */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .task-item {
+      background-color: var(--bg-card-solid);
+      background-color: var(--bg-card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.85rem;
+      transition: transform 0.15s ease, border-color var(--transition), opacity var(--transition);
+    }
+
+    .task-item:hover {
+      border-color: var(--primary);
+    }
+
+    .task-item.completed {
+      opacity: 0.68;
+    }
+
+    .task-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.8rem;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .task-checkbox {
+      width: 22px;
+      height: 22px;
+      margin-top: 3px;
+      accent-color: var(--primary);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .task-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .task-title {
+      font-size: 1.02rem;
+      font-weight: 700;
+      word-wrap: break-word;
+    }
+
+    .task-item.completed .task-title {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      align-items: center;
+    }
+
+    .badge {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .badge-prio-high {
+      background-color: var(--prio-high-bg);
+      color: var(--prio-high-text);
+      border-color: var(--prio-high-border);
+    }
+
+    .badge-prio-medium {
+      background-color: var(--prio-med-bg);
+      color: var(--prio-med-text);
+      border-color: var(--prio-med-border);
+    }
+
+    .badge-prio-low {
+      background-color: var(--prio-low-bg);
+      color: var(--prio-low-text);
+      border-color: var(--prio-low-border);
+    }
+
+    .badge-category {
+      background-color: rgba(59, 130, 246, 0.14);
+      color: var(--primary);
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    .badge-date {
+      background-color: var(--bg-input);
+      color: var(--text-muted);
+      border-color: var(--border-color);
+    }
+
+    .badge-date.overdue {
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.45);
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 0.4rem;
+      flex-shrink: 0;
+    }
+
+    .icon-btn {
+      padding: 0.45rem 0.65rem;
+      min-height: 36px;
+      font-size: 0.85rem;
+    }
+
+    /* الحالة الفارغة */
+    .empty-state {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      background-color: var(--bg-card-solid);
+      background-color: var(--bg-card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px dashed var(--border-color);
+      border-radius: var(--radius-lg);
+      color: var(--text-muted);
+    }
+
+    /* إشعار مخصص بديل عن alert() */
+    .toast {
+      position: fixed;
+      bottom: 1.25rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background-color: var(--bg-card-solid);
+      color: var(--text-main);
+      border: 1px solid var(--primary);
+      padding: 0.75rem 1.25rem;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow);
+      font-weight: 600;
+      font-size: 0.9rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ==========================================================================
+       8. قسم النسخ الاحتياطي ونافذة دليل التثبيت (Backup & Install Modal)
+       ========================================================================== */
+    .backup-card {
+      margin-top: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .backup-header h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+
+    .backup-header p {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+    }
+
+    .backup-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(2, 6, 23, 0.72);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 2000;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-dialog {
+      background-color: var(--bg-card-solid);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      max-width: 580px;
+      width: 100%;
+      max-height: 88vh;
+      overflow-y: auto;
+      padding: 1.35rem;
+      box-shadow: var(--shadow);
+    }
+
+    .modal-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-top h3 {
+      font-size: 1.15rem;
+      font-weight: 800;
+    }
+
+    .guide-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .guide-item {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 0.9rem;
+    }
+
+    .guide-item h4 {
+      font-size: 0.98rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+      color: var(--primary);
+    }
+
+    .guide-item ol {
+      padding-right: 1.25rem;
+      font-size: 0.88rem;
+      color: var(--text-main);
+    }
+
+    .guide-item li + li {
+      margin-top: 0.25rem;
+    }
+
+    .guide-note {
+      margin-top: 0.9rem;
+      padding: 0.75rem;
+      border-radius: var(--radius-sm);
+      background-color: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      font-size: 0.84rem;
+      color: var(--text-main);
+    }
+  </style>
+</head>
+<body>
+  <!-- الخلفية المتحركة الناعمة -->
+  <div class="animated-bg" aria-hidden="true">
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+  </div>
+
+  <div class="container">
+    <!-- الشريط العلوي -->
+    <header>
+      <div class="brand">
+        <h1>📋 مهامي <span style="font-size:0.95rem;font-weight:600;color:var(--text-muted);">| مُنظّم المهام والمواعيد</span></h1>
+        <p>تطبيق ويب تقدمي (PWA) خفيف ويعمل دون إنترنت مع حفظ تلقائي</p>
+      </div>
+      <div class="header-actions">
+        <button type="button" id="installAppBtn" class="btn-install" style="display: none;" title="تثبيت التطبيق مباشرة">📲 تثبيت التطبيق</button>
+        <button type="button" id="openGuideBtn" title="طريقة التثبيت على الهاتف والكمبيوتر">📌 دليل التثبيت</button>
+        <button type="button" id="motionToggleBtn" title="تشغيل أو إيقاف حركة الخلفية">⏸️ إيقاف الحركة</button>
+        <button type="button" id="themeToggle" title="تبديل المظهر">☀️ الوضع النهاري</button>
+      </div>
+    </header>
+
+    <!-- شريط الإحصائيات -->
+    <section class="stats-grid" aria-label="ملخص المهام">
+      <div class="stat-card">
+        <span class="stat-label">إجمالي المهام</span>
+        <span class="stat-value accent" id="totalCount">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">قيد التنفيذ</span>
+        <span class="stat-value warning" id="activeCount">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">المكتملة</span>
+        <span class="stat-value success" id="completedCount">0</span>
+      </div>
+      <div class="stat-card" style="justify-content: center;">
+        <button type="button" id="clearCompletedBtn" class="btn-danger" style="width: 100%;">
+          🗑️ مسح المكتملة
+        </button>
+      </div>
+    </section>
+
+    <!-- نموذج إضافة أو تعديل مهمة -->
+    <section class="card">
+      <div class="form-title">
+        <span id="formHeading">➕ إضافة مهمة أو موعد جديد</span>
+        <button type="button" id="cancelEditBtn" style="display: none; padding: 0.3rem 0.7rem; font-size: 0.82rem;">إلغاء التعديل</button>
+      </div>
+      <form id="taskForm" class="task-form">
+        <div class="field-group">
+          <label for="taskTitle">عنوان المهمة أو الموعد *</label>
+          <input type="text" id="taskTitle" placeholder="مثال: مراجعة الدرس أو موعد الطبيب..." required />
+        </div>
+
+        <div class="field-group">
+          <label for="taskDateTime">التاريخ والوقت (اختياري)</label>
+          <input type="datetime-local" id="taskDateTime" />
+        </div>
+
+        <div class="field-group">
+          <label for="taskPriority">الأولوية</label>
+          <select id="taskPriority">
+            <option value="high">🔴 عالية</option>
+            <option value="medium" selected>🟡 متوسطة</option>
+            <option value="low">🟢 منخفضة</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label for="taskCategory">التصنيف</label>
+          <select id="taskCategory">
+            <option value="عمل">💼 عمل</option>
+            <option value="شخصي">🏠 شخصي</option>
+            <option value="دراسة">📚 دراسة</option>
+            <option value="عاجل">⚡ عاجل</option>
+            <option value="أخرى">📌 أخرى</option>
+          </select>
+        </div>
+
+        <div class="form-submit-row">
+          <button type="submit" id="submitBtn" class="btn-primary">حفظ المهمة</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- شريط التصفية والبحث -->
+    <section class="controls-bar">
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab-btn active" data-status="all">الكل</button>
+        <button type="button" class="tab-btn" data-status="active">قيد التنفيذ</button>
+        <button type="button" class="tab-btn" data-status="completed">مكتملة</button>
+      </div>
+
+      <div class="filters-right">
+        <input type="text" id="searchInput" placeholder="🔍 ابحث في المهام..." />
+        <select id="filterSelect" title="تصفية حسب التصنيف أو الأولوية">
+          <option value="all">كل التصنيفات والأولويات</option>
+          <optgroup label="حسب التصنيف">
+            <option value="cat:عمل">💼 عمل</option>
+            <option value="cat:شخصي">🏠 شخصي</option>
+            <option value="cat:دراسة">📚 دراسة</option>
+            <option value="cat:عاجل">⚡ عاجل</option>
+            <option value="cat:أخرى">📌 أخرى</option>
+          </optgroup>
+          <optgroup label="حسب الأولوية">
+            <option value="prio:high">🔴 أولوية عالية</option>
+            <option value="prio:medium">🟡 أولوية متوسطة</option>
+            <option value="prio:low">🟢 أولوية منخفضة</option>
+          </optgroup>
+        </select>
+      </div>
+    </section>
+
+    <!-- قائمة المهام -->
+    <main id="taskList" class="task-list" aria-live="polite"></main>
+
+    <!-- قسم النسخ الاحتياطي ونقل البيانات بين الأجهزة -->
+    <section class="card backup-card" aria-label="النسخ الاحتياطي ونقل البيانات">
+      <div class="backup-header">
+        <h2>💾 النسخ الاحتياطي ونقل البيانات بين الأجهزة</h2>
+        <p>تُحفظ مهامك محلياً على هذا الجهاز تلقائياً. استخدم التصدير والاستيراد لنقل مهامك بين الهاتف والكمبيوتر أو للاحتفاظ بنسخة آمنة.</p>
+      </div>
+      <div class="backup-actions">
+        <button type="button" id="exportBtn" class="btn-primary">⬇️ تصدير نسخة احتياطية (JSON)</button>
+        <button type="button" id="importBtn">⬆️ استيراد من ملف (JSON)</button>
+        <button type="button" id="clearCompletedFooterBtn" class="btn-danger">🧹 مسح المهام المكتملة</button>
+        <input type="file" id="importFile" accept=".json" hidden />
+      </div>
+    </section>
+  </div>
+
+  <!-- نافذة دليل التثبيت الدائم (Modal) -->
+  <div id="installGuideModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="guideModalTitle">
+    <div class="modal-dialog">
+      <div class="modal-top">
+        <h3 id="guideModalTitle">📲 دليل التثبيت الدائم على أجهزتك</h3>
+        <button type="button" id="closeGuideBtn" class="icon-btn" aria-label="إغلاق">✖️</button>
+      </div>
+      <div class="guide-list">
+        <div class="guide-item">
+          <h4>🤖 الأندرويد (Chrome / Brave / Edge)</h4>
+          <ol>
+            <li>افتح التطبيق في المتصفح واضغط على زر <strong>تثبيت التطبيق</strong> إن ظهر في الأعلى.</li>
+            <li>أو اضغط على قائمة المتصفح (<strong>⋮</strong>) ثم اختر <strong>تثبيت التطبيق</strong> أو <strong>الإضافة إلى الشاشة الرئيسية</strong>.</li>
+          </ol>
+        </div>
+
+        <div class="guide-item">
+          <h4>🍎 الآيفون والآيباد (Safari)</h4>
+          <ol>
+            <li>افتح الصفحة عبر متصفح <strong>Safari</strong>.</li>
+            <li>اضغط على أيقونة <strong>المشاركة (⬆️)</strong> في شريط المتصفح السفلي.</li>
+            <li>مرر للأسفل واختر <strong>إضافة إلى الشاشة الرئيسية (Add to Home Screen)</strong> ثم اضغط <strong>إضافة</strong>.</li>
+          </ol>
+        </div>
+
+        <div class="guide-item">
+          <h4>💻 الويندوز (Edge / Chrome / Brave)</h4>
+          <ol>
+            <li>انظر إلى شريط العنوان في الأعلى واضغط على أيقونة <strong>تثبيت التطبيق (⊕ / 💻)</strong>.</li>
+            <li>أو من قائمة المتصفح اختر <strong>التطبيقات (Apps) &larr; تثبيت هذا الموقع كتطبيق</strong> ليظهر في قائمة ابدأ وسطح المكتب.</li>
+          </ol>
+        </div>
+      </div>
+      <div class="guide-note">
+        💡 <strong>ملاحظة تقنية:</strong> لتفعيل التثبيت التلقائي والعمل دون إنترنت (Service Worker)، يُفضّل فتح الملف عبر رابط <strong>HTTPS</strong> أو <strong>localhost</strong> (مثل استضافة GitHub Pages المجانية). عند فتحه مباشرة كملف محلي (<code>file://</code>) سيعمل بكامل ميزاته مع الحفظ التلقائي دون أي أخطاء.
+      </div>
+    </div>
+  </div>
+
+  <!-- مربع إشعارات خفيف -->
+  <div id="toast" class="toast" role="status"></div>
+
+  <script>
+    /**
+     * ==========================================================================
+     * إعداد PWA المدمج (SVG Icon + Web App Manifest + Service Worker)
+     * ==========================================================================
+     */
+    (function setupPWA() {
+      // 1. توليد أيقونة SVG عالية الدقة مدمجة (Data URI)
+      const svgIcon = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+          <defs>
+            <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#2563eb"/>
+              <stop offset="100%" stop-color="#0f172a"/>
+            </linearGradient>
+          </defs>
+          <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+          <rect x="96" y="88" width="320" height="336" rx="44" fill="#ffffff" fill-opacity="0.12" stroke="#93c5fd" stroke-width="10"/>
+          <path d="M168 256 L224 312 L348 188" fill="none" stroke="#34d399" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="168" y1="364" x2="344" y2="364" stroke="#e2e8f0" stroke-width="20" stroke-linecap="round"/>
+        </svg>
+      `.trim();
+
+      const iconDataUri = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgIcon);
+
+      const faviconEl = document.getElementById("faviconIcon");
+      const appleIconEl = document.getElementById("appleTouchIcon");
+      if (faviconEl) faviconEl.href = iconDataUri;
+      if (appleIconEl) appleIconEl.href = iconDataUri;
+
+      // 2. إنشاء Web App Manifest ديناميكياً عبر Blob URL
+      try {
+        const manifestData = {
+          name: "مهامي - منظم المهام والمواعيد",
+          short_name: "مهامي",
+          description: "أداة خفيفة وسريعة لتنظيم المهام والمواعيد اليومية مع العمل دون إنترنت",
+          start_url: window.location.href,
+          scope: "./",
+          display: "standalone",
+          dir: "rtl",
+          lang: "ar",
+          background_color: "#0f172a",
+          theme_color: "#2563eb",
+          icons: [
+            {
+              src: iconDataUri,
+              sizes: "192x192 512x512",
+              type: "image/svg+xml",
+              purpose: "any maskable"
+            }
+          ]
+        };
+
+        const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: "application/manifest+json" });
+        const manifestUrl = URL.createObjectURL(manifestBlob);
+        const manifestLink = document.getElementById("dynamicManifest");
+        if (manifestLink) manifestLink.href = manifestUrl;
+      } catch (e) {
+        // تجاهل صامت في البيئات المقيدة
+      }
+
+      // 3. تسجيل Service Worker مدمج عبر Blob URL (فقط على HTTPS أو localhost)
+      const isSecureOrigin =
+        window.location.protocol === "https:" ||
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1";
+
+      if ("serviceWorker" in navigator && isSecureOrigin) {
+        try {
+          const swCode = `
+            const CACHE_NAME = 'mahami-pwa-cache-v1';
+            self.addEventListener('install', (event) => {
+              self.skipWaiting();
+              event.waitUntil(
+                caches.open(CACHE_NAME).then((cache) => cache.addAll(['./']).catch(() => {}))
+              );
+            });
+            self.addEventListener('activate', (event) => {
+              event.waitUntil(self.clients.claim());
+            });
+            self.addEventListener('fetch', (event) => {
+              if (event.request.method !== 'GET') return;
+              event.respondWith(
+                fetch(event.request)
+                  .then((response) => {
+                    const copy = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)).catch(() => {});
+                    return response;
+                  })
+                  .catch(() => caches.match(event.request).then((cached) => cached || caches.match('./')))
+              );
+            });
+          `;
+          const swBlob = new Blob([swCode], { type: "application/javascript" });
+          const swUrl = URL.createObjectURL(swBlob);
+          navigator.serviceWorker.register(swUrl).catch(() => {
+            // معالجة صامتة إذا قيّد المتصفح التسجيل من Blob
+          });
+        } catch (err) {
+          // معالجة صامتة آمنة
+        }
+      }
+    })();
+
+    /**
+     * ==========================================================================
+     * منطق التطبيق وإدارة الحالة (Vanilla JavaScript)
+     * ==========================================================================
+     */
+    (function () {
+      const STORAGE_KEY = "arabic_todo_schedule_v1";
+      const THEME_KEY = "arabic_todo_theme_v1";
+      const MOTION_KEY = "arabic_todo_motion_v1";
+
+      // الحالة الرئيسية للتطبيق
+      let tasks = [];
+      let currentStatusFilter = "all";
+      let currentExtraFilter = "all";
+      let searchQuery = "";
+      let editingTaskId = null;
+      let deferredInstallPrompt = null;
+
+      // عناصر الواجهة
+      const htmlEl = document.documentElement;
+      const bodyEl = document.body;
+      const themeToggleBtn = document.getElementById("themeToggle");
+      const motionToggleBtn = document.getElementById("motionToggleBtn");
+      const installAppBtn = document.getElementById("installAppBtn");
+      const openGuideBtn = document.getElementById("openGuideBtn");
+      const closeGuideBtn = document.getElementById("closeGuideBtn");
+      const installGuideModal = document.getElementById("installGuideModal");
+
+      const taskForm = document.getElementById("taskForm");
+      const formHeading = document.getElementById("formHeading");
+      const submitBtn = document.getElementById("submitBtn");
+      const cancelEditBtn = document.getElementById("cancelEditBtn");
+
+      const titleInput = document.getElementById("taskTitle");
+      const dateTimeInput = document.getElementById("taskDateTime");
+      const priorityInput = document.getElementById("taskPriority");
+      const categoryInput = document.getElementById("taskCategory");
+
+      const taskListEl = document.getElementById("taskList");
+      const totalCountEl = document.getElementById("totalCount");
+      const activeCountEl = document.getElementById("activeCount");
+      const completedCountEl = document.getElementById("completedCount");
+
+      const tabButtons = document.querySelectorAll(".tab-btn");
+      const searchInput = document.getElementById("searchInput");
+      const filterSelect = document.getElementById("filterSelect");
+      const clearCompletedBtn = document.getElementById("clearCompletedBtn");
+      const clearCompletedFooterBtn = document.getElementById("clearCompletedFooterBtn");
+
+      const exportBtn = document.getElementById("exportBtn");
+      const importBtn = document.getElementById("importBtn");
+      const importFileInput = document.getElementById("importFile");
+      const toastEl = document.getElementById("toast");
+
+      let toastTimer = null;
+
+      // التقاط حدث التثبيت الذكي في متصفحات Chromium
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+        if (installAppBtn) {
+          installAppBtn.style.display = "inline-flex";
+        }
+      });
+
+      window.addEventListener("appinstalled", () => {
+        deferredInstallPrompt = null;
+        if (installAppBtn) {
+          installAppBtn.style.display = "none";
+        }
+        showToast("🎉 تم تثبيت تطبيق «مهامي» بنجاح!");
+      });
+
+      if (installAppBtn) {
+        installAppBtn.addEventListener("click", async () => {
+          if (!deferredInstallPrompt) {
+            installGuideModal.classList.add("open");
+            return;
+          }
+          deferredInstallPrompt.prompt();
+          const choice = await deferredInstallPrompt.userChoice;
+          if (choice && choice.outcome === "accepted") {
+            installAppBtn.style.display = "none";
+          }
+          deferredInstallPrompt = null;
+        });
+      }
+
+      // فتح وإغلاق نافذة دليل التثبيت
+      openGuideBtn.addEventListener("click", () => {
+        installGuideModal.classList.add("open");
+      });
+
+      closeGuideBtn.addEventListener("click", () => {
+        installGuideModal.classList.remove("open");
+      });
+
+      installGuideModal.addEventListener("click", (e) => {
+        if (e.target === installGuideModal) {
+          installGuideModal.classList.remove("open");
+        }
+      });
+
+      // عرض رسالة إشعار أنيقة بدلاً من alert()
+      function showToast(message) {
+        toastEl.textContent = message;
+        toastEl.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toastEl.classList.remove("show");
+        }, 2600);
+      }
+
+      // تحميل وحفظ المهام في localStorage
+      function loadTasks() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          tasks = raw ? JSON.parse(raw) : [];
+          if (!Array.isArray(tasks)) tasks = [];
+        } catch (err) {
+          console.error("خطأ في قراءة البيانات:", err);
+          tasks = [];
+        }
+      }
+
+      function saveTasks() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+        } catch (err) {
+          showToast("⚠️ تعذر حفظ البيانات محلياً");
+        }
+      }
+
+      // إدارة الوضع الليلي والنهاري
+      function applyTheme(theme) {
+        htmlEl.setAttribute("data-theme", theme);
+        themeToggleBtn.textContent = theme === "dark" ? "☀️ الوضع النهاري" : "🌙 الوضع الليلي";
+        try {
+          localStorage.setItem(THEME_KEY, theme);
+        } catch (e) {}
+      }
+
+      function initTheme() {
+        let savedTheme = "dark";
+        try {
+          savedTheme = localStorage.getItem(THEME_KEY) || "dark";
+        } catch (e) {}
+        applyTheme(savedTheme);
+      }
+
+      themeToggleBtn.addEventListener("click", () => {
+        const current = htmlEl.getAttribute("data-theme");
+        applyTheme(current === "dark" ? "light" : "dark");
+      });
+
+      // إدارة تشغيل وإيقاف الخلفية المتحركة
+      function applyMotion(enabled) {
+        bodyEl.classList.toggle("motion-paused", !enabled);
+        motionToggleBtn.textContent = enabled ? "⏸️ إيقاف الحركة" : "▶️ تشغيل الحركة";
+        try {
+          localStorage.setItem(MOTION_KEY, enabled ? "on" : "off");
+        } catch (e) {}
+      }
+
+      function initMotion() {
+        let motionEnabled = true;
+        try {
+          const saved = localStorage.getItem(MOTION_KEY);
+          if (saved === "off") {
+            motionEnabled = false;
+          } else if (!saved && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            motionEnabled = false;
+          }
+        } catch (e) {}
+        applyMotion(motionEnabled);
+      }
+
+      motionToggleBtn.addEventListener("click", () => {
+        const isCurrentlyPaused = bodyEl.classList.contains("motion-paused");
+        applyMotion(isCurrentlyPaused);
+      });
+
+      // تنسيق التاريخ والوقت بالعربية بشكل مقروء
+      function formatDateTime(isoString) {
+        if (!isoString) return null;
+        const date = new Date(isoString);
+        if (isNaN(date.getTime())) return null;
+
+        const formatted = date.toLocaleString("ar-DZ", {
+          weekday: "short",
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+
+        const isOverdue = date.getTime() < Date.now();
+        return { text: formatted, isOverdue };
+      }
+
+      // ترجمة الأولوية إلى نص وأيقونة
+      function getPriorityMeta(prio) {
+        switch (prio) {
+          case "high":
+            return { label: "🔴 عالية", className: "badge-prio-high" };
+          case "low":
+            return { label: "🟢 منخفضة", className: "badge-prio-low" };
+          default:
+            return { label: "🟡 متوسطة", className: "badge-prio-medium" };
+        }
+      }
+
+      // تحديث عدادات الإحصائيات
+      function updateStats() {
+        const total = tasks.length;
+        const completed = tasks.filter(t => t.completed).length;
+        const active = total - completed;
+
+        totalCountEl.textContent = total;
+        activeCountEl.textContent = active;
+        completedCountEl.textContent = completed;
+      }
+
+      // تصفية وترتيب المهام للعرض
+      function getFilteredTasks() {
+        return tasks
+          .filter(task => {
+            if (currentStatusFilter === "active" && task.completed) return false;
+            if (currentStatusFilter === "completed" && !task.completed) return false;
+
+            if (currentExtraFilter !== "all") {
+              const [type, val] = currentExtraFilter.split(":");
+              if (type === "cat" && task.category !== val) return false;
+              if (type === "prio" && task.priority !== val) return false;
+            }
+
+            if (searchQuery.trim() !== "") {
+              const q = searchQuery.trim().toLowerCase();
+              const matchTitle = task.title.toLowerCase().includes(q);
+              const matchCat = task.category.toLowerCase().includes(q);
+              if (!matchTitle && !matchCat) return false;
+            }
+
+            return true;
+          })
+          .sort((a, b) => {
+            // غير المكتملة أولاً
+            if (a.completed !== b.completed) return a.completed ? 1 : -1;
+            // ترتيب حسب التاريخ الأقرب إن وُجد
+            if (a.dateTime && b.dateTime) {
+              return new Date(a.dateTime) - new Date(b.dateTime);
+            }
+            if (a.dateTime) return -1;
+            if (b.dateTime) return 1;
+            // الأحدث إضافة أولاً
+            return b.createdAt - a.createdAt;
+          });
+      }
+
+      // إعادة رسم قائمة المهام في الصفحة
+      function renderTasks() {
+        updateStats();
+        const filtered = getFilteredTasks();
+        taskListEl.innerHTML = "";
+
+        if (filtered.length === 0) {
+          const emptyDiv = document.createElement("div");
+          emptyDiv.className = "empty-state";
+          emptyDiv.innerHTML = tasks.length === 0
+            ? "<p><strong>لا توجد مهام أو مواعيد بعد ✨</strong></p><p style='margin-top:0.35rem;font-size:0.9rem;'>ابدأ بإضافة أول مهمة أو موعد من النموذج أعلاه.</p>"
+            : "<p><strong>لا توجد نتائج مطابقة للبحث أو التصفية الحالية.</strong></p>";
+          taskListEl.appendChild(emptyDiv);
+          return;
+        }
+
+        filtered.forEach(task => {
+          const item = document.createElement("article");
+          item.className = `task-item ${task.completed ? "completed" : ""}`;
+
+          const prioMeta = getPriorityMeta(task.priority);
+          const dateInfo = formatDateTime(task.dateTime);
+
+          // القسم الرئيسي (مربع التحديد + العنوان + الشارات)
+          const mainDiv = document.createElement("div");
+          mainDiv.className = "task-main";
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.className = "task-checkbox";
+          checkbox.checked = task.completed;
+          checkbox.setAttribute("aria-label", `تحديد "${task.title}" كمكتملة`);
+          checkbox.addEventListener("change", () => toggleTask(task.id));
+
+          const contentDiv = document.createElement("div");
+          contentDiv.className = "task-content";
+
+          const titleEl = document.createElement("div");
+          titleEl.className = "task-title";
+          titleEl.textContent = task.title;
+
+          const badgesDiv = document.createElement("div");
+          badgesDiv.className = "badges";
+
+          const prioBadge = document.createElement("span");
+          prioBadge.className = `badge ${prioMeta.className}`;
+          prioBadge.textContent = prioMeta.label;
+          badgesDiv.appendChild(prioBadge);
+
+          const catBadge = document.createElement("span");
+          catBadge.className = "badge badge-category";
+          catBadge.textContent = task.category;
+          badgesDiv.appendChild(catBadge);
+
+          if (dateInfo) {
+            const dateBadge = document.createElement("span");
+            const showOverdue = dateInfo.isOverdue && !task.completed;
+            dateBadge.className = `badge badge-date ${showOverdue ? "overdue" : ""}`;
+            dateBadge.textContent = `⏰ ${dateInfo.text}${showOverdue ? " (متأخر)" : ""}`;
+            badgesDiv.appendChild(dateBadge);
+          }
+
+          contentDiv.appendChild(titleEl);
+          contentDiv.appendChild(badgesDiv);
+          mainDiv.appendChild(checkbox);
+          mainDiv.appendChild(contentDiv);
+
+          // أزرار التحكم (تعديل / حذف)
+          const actionsDiv = document.createElement("div");
+          actionsDiv.className = "task-actions";
+
+          const editBtn = document.createElement("button");
+          editBtn.type = "button";
+          editBtn.className = "icon-btn";
+          editBtn.title = "تعديل المهمة";
+          editBtn.textContent = "✏️";
+          editBtn.addEventListener("click", () => startEditTask(task.id));
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.type = "button";
+          deleteBtn.className = "icon-btn btn-danger";
+          deleteBtn.title = "حذف المهمة";
+          deleteBtn.textContent = "🗑️";
+          deleteBtn.addEventListener("click", () => deleteTask(task.id));
+
+          actionsDiv.appendChild(editBtn);
+          actionsDiv.appendChild(deleteBtn);
+
+          item.appendChild(mainDiv);
+          item.appendChild(actionsDiv);
+          taskListEl.appendChild(item);
+        });
+      }
+
+      // إضافة أو حفظ تعديل مهمة
+      taskForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const title = titleInput.value.trim();
+        if (!title) {
+          showToast("⚠️ يرجى كتابة عنوان المهمة أولاً");
+          titleInput.focus();
+          return;
+        }
+
+        const dateTime = dateTimeInput.value || "";
+        const priority = priorityInput.value;
+        const category = categoryInput.value;
+
+        if (editingTaskId) {
+          tasks = tasks.map(t =>
+            t.id === editingTaskId
+              ? { ...t, title, dateTime, priority, category }
+              : t
+          );
+          showToast("✅ تم تحديث المهمة بنجاح");
+          resetFormState();
+        } else {
+          const newTask = {
+            id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+            title,
+            dateTime,
+            priority,
+            category,
+            completed: false,
+            createdAt: Date.now()
+          };
+          tasks.unshift(newTask);
+          showToast("✅ تمت إضافة المهمة بنجاح");
+          taskForm.reset();
+          priorityInput.value = "medium";
+        }
+
+        saveTasks();
+        renderTasks();
+      });
+
+      // بدء تعديل مهمة قائمة
+      function startEditTask(id) {
+        const task = tasks.find(t => t.id === id);
+        if (!task) return;
+
+        editingTaskId = id;
+        titleInput.value = task.title;
+        dateTimeInput.value = task.dateTime || "";
+        priorityInput.value = task.priority;
+        categoryInput.value = task.category;
+
+        formHeading.textContent = "✏️ تعديل المهمة الحالية";
+        submitBtn.textContent = "حفظ التعديلات";
+        cancelEditBtn.style.display = "inline-flex";
+        titleInput.focus();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function resetFormState() {
+        editingTaskId = null;
+        taskForm.reset();
+        priorityInput.value = "medium";
+        formHeading.textContent = "➕ إضافة مهمة أو موعد جديد";
+        submitBtn.textContent = "حفظ المهمة";
+        cancelEditBtn.style.display = "none";
+      }
+
+      cancelEditBtn.addEventListener("click", resetFormState);
+
+      // تبديل حالة الإنجاز
+      function toggleTask(id) {
+        tasks = tasks.map(t =>
+          t.id === id ? { ...t, completed: !t.completed } : t
+        );
+        saveTasks();
+        renderTasks();
+      }
+
+      // حذف مهمة
+      function deleteTask(id) {
+        if (editingTaskId === id) resetFormState();
+        tasks = tasks.filter(t => t.id !== id);
+        saveTasks();
+        renderTasks();
+        showToast("🗑️ تم حذف المهمة");
+      }
+
+      // مسح المهام المكتملة
+      function clearAllCompletedTasks() {
+        const completedCount = tasks.filter(t => t.completed).length;
+        if (completedCount === 0) {
+          showToast("ℹ️ لا توجد مهام مكتملة لمسحها");
+          return;
+        }
+        tasks = tasks.filter(t => !t.completed);
+        saveTasks();
+        renderTasks();
+        showToast(`🧹 تم مسح ${completedCount} من المهام المكتملة`);
+      }
+
+      clearCompletedBtn.addEventListener("click", clearAllCompletedTasks);
+      if (clearCompletedFooterBtn) {
+        clearCompletedFooterBtn.addEventListener("click", clearAllCompletedTasks);
+      }
+
+      // التبديل بين تبويبات الحالة
+      tabButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+          tabButtons.forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          currentStatusFilter = btn.dataset.status;
+          renderTasks();
+        });
+      });
+
+      // البحث والتصفية الإضافية
+      searchInput.addEventListener("input", (e) => {
+        searchQuery = e.target.value;
+        renderTasks();
+      });
+
+      filterSelect.addEventListener("change", (e) => {
+        currentExtraFilter = e.target.value;
+        renderTasks();
+      });
+
+      // تصدير نسخة احتياطية JSON
+      exportBtn.addEventListener("click", () => {
+        if (tasks.length === 0) {
+          showToast("ℹ️ لا توجد مهام لتصديرها");
+          return;
+        }
+        const blob = new Blob([JSON.stringify(tasks, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        const dateTag = new Date().toISOString().slice(0, 10);
+        a.href = url;
+        a.download = `tasks-backup-${dateTag}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast("⬇️ تم تحميل النسخة الاحتياطية");
+      });
+
+      // استيراد نسخة احتياطية JSON
+      importBtn.addEventListener("click", () => {
+        importFileInput.click();
+      });
+
+      importFileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const imported = JSON.parse(event.target.result);
+            if (!Array.isArray(imported)) throw new Error("صيغة غير صالحة");
+
+            // دمج المهام المستوردة مع تجنب تكرار المعرّفات
+            const existingIds = new Set(tasks.map(t => t.id));
+            let added = 0;
+
+            imported.forEach(item => {
+              if (item && typeof item.title === "string") {
+                const safeId = existingIds.has(item.id)
+                  ? Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
+                  : (item.id || Date.now().toString(36));
+                existingIds.add(safeId);
+
+                tasks.push({
+                  id: safeId,
+                  title: item.title,
+                  dateTime: item.dateTime || "",
+                  priority: ["high", "medium", "low"].includes(item.priority) ? item.priority : "medium",
+                  category: item.category || "شخصي",
+                  completed: Boolean(item.completed),
+                  createdAt: item.createdAt || Date.now()
+                });
+                added++;
+              }
+            });
+
+            saveTasks();
+            renderTasks();
+            showToast(`✅ تم استيراد ${added} مهمة بنجاح`);
+          } catch (err) {
+            showToast("⚠️ فشل الاستيراد: تأكد من صحة ملف JSON");
+          }
+          importFileInput.value = "";
+        };
+        reader.readAsText(file);
+      });
+
+      // تشغيل التطبيق
+      initTheme();
+      initMotion();
+      loadTasks();
+      renderTasks();
+    })();
+  </script>
+</body>
+</html>
